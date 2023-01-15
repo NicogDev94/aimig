@@ -18,17 +18,17 @@ export default function NodeModal() {
   };
 
   const handleSaveNode = () => {
-    // dispatch(addNode({ id: id, label: label }));
     const cloneData = { ...addNodeData.data };
     cloneData.id = node.id;
     cloneData.label = node.label;
+    console.log(cloneData)
     addNodeData.callback(cloneData);
     setDisplayModal(false);
   };
 
   const handleAddNodeCallback = (event: any) => {
     const { detail } = event;
-    setNode({ ...node, ...detail.data });
+    setNode({ ...node, id: detail.data.id, label: detail.data.label });
     setAddNodeData(detail);
     setDisplayModal(true);
   };

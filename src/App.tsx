@@ -1,22 +1,43 @@
 import React, { useEffect } from 'react';
 import './App.css';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { fetchAll } from './slices/app.slice';
+import { fetchAll, setIsolatedMode } from './slices/app.slice';
 import Graph from './components/Graph';
-import ActionButtons from './components/NodeModal';
+import NodeModal from './components/NodeModal';
+import styled from 'styled-components';
+
+const IsolatedModeActions = styled.div`
+  z-index: 50;
+  position: absolute;
+  left: 0;
+  top: 44px;
+  height: 28px;
+`;
 
 function App() {
   const dispatch = useAppDispatch();
 
-  const { loading } = useAppSelector((state) => state.appDatas);
+  const { loading, isolatedMode } = useAppSelector((state) => state.appDatas);
 
   useEffect(() => {
-    dispatch(fetchAll());
-  }, []);
+    if (!isolatedMode) dispatch(fetchAll());
+  }, [isolatedMode]);
+
+  useEffect(() => {});
+
+  const handleBackPlainView = () => {
+    console.log('OK');
+    dispatch(setIsolatedMode(false));
+  };
 
   return (
     <>
-    <ActionButtons />
+      <NodeModal />
+      {isolatedMode && (
+        <IsolatedModeActions>
+          <button onClick={handleBackPlainView}>Back</button>
+        </IsolatedModeActions>
+      )}
       <Graph />
       {loading && (
         <div style={{ position: 'absolute', top: '45vh', left: '45vw' }}>

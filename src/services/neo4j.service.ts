@@ -32,8 +32,24 @@ class Neo4JService {
     });
   }
 
+  async getNodeAndRelations(id: string) {
+    console.log(id)
+    const session: Session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: neo4j.session.WRITE,
+    });
+
+    let cypher = `MATCH (nFocus)<-[r]->(n) WHERE ID(nFocus)=${id} RETURN nFocus,r,n`;
+    const res: QueryResult = await session.run(cypher);
+    // load the node with the given nodeId ans also load all its connected nodes
+    session.close();
+    return res.records.map((r: Record) => {
+      return { nodes: [r.get('nFocus'), r.get('n')], relation: r.get('r') };
+    });
+  }
+
   clear() {
-      instance = null;
+    instance = null;
     if (this.driver) this.driver.close();
   }
 }
