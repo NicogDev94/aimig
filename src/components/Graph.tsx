@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import {
   setEdges,
@@ -12,6 +12,11 @@ import neo4jService from '../services/neo4j.service';
 import { getOptions } from '../constants/constants';
 import { Network } from 'vis-network';
 import RightPanel from './RightPanel';
+import {
+  subscribeToEvent,
+  EventType,
+  unSubscribeToEvent,
+} from '../helpers/custom-event.helper';
 
 const GraphContainer = styled.div`
   width: 100vw;
@@ -20,8 +25,12 @@ const GraphContainer = styled.div`
 
 export default function Graph() {
   const dispatch = useAppDispatch();
-  const { network,nodes, edges } =
+  const { network, nodes, edges, selectedNodes, selectedEdges } =
     useAppSelector((state) => state.appDatas);
+
+  const [node, setNode] = useState<any>(null);
+  const [addNodeData, setAddNodeData] = useState<any>(null);
+  const [edge, setEdge] = useState<any>(null);
 
   const handleOnCLick = (data: any) => {
     dispatch(setSelections(data));
@@ -64,13 +73,42 @@ export default function Graph() {
     };
   }, [network]);
 
+  const handleAddNodeCallback = (event: any) => {
+    console.log('edit');
+    const { detail } = event;
+    setNode({ ...node, ...detail.data });
+    setAddNodeData(detail);
+  };
+
+  useEffect(() => {
+    subscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
+    return () => {
+      unSubscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedNodes.length) setNode({ ...selectedNodes[0] });
+    else setNode(null);
+    if (selectedEdges.length) setEdge({ ...selectedEdges[0] });
+    else setEdge(null);
+  }, [selectedNodes, selectedEdges]);
+
   return (
     <>
       <GraphContainer
         id="mynetwork"
         style={{ width: '100vw', height: '100vh' }}
       ></GraphContainer>
-      <RightPanel />
+      {(node || edge) && (
+        <RightPanel
+          addNodeData={addNodeData}
+          node={node}
+          setNode={setNode}
+          edge={edge}
+          setEdge={setEdge}
+        />
+      )}
     </>
   );
 }
