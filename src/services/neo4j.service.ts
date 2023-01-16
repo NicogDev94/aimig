@@ -33,7 +33,7 @@ class Neo4JService {
   }
 
   async getNodeAndRelations(id: string) {
-    console.log(id)
+    console.log(id);
     const session: Session = this.driver.session({
       database: 'neo4j',
       defaultAccessMode: neo4j.session.WRITE,
@@ -46,6 +46,36 @@ class Neo4JService {
     return res.records.map((r: Record) => {
       return { nodes: [r.get('nFocus'), r.get('n')], relation: r.get('r') };
     });
+  }
+  async updateNodeProperties(id: string, dataToUpdate: any) {
+    const session: Session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: neo4j.session.WRITE,
+    });
+    let cypher = `MATCH (p)
+    WHERE ID(p)=${id}
+    SET p = $dataToUpdate return p`;
+    console.log(cypher);
+    await session.run(cypher, { dataToUpdate });
+    session.close();
+  }
+  async updateNodeLabel(id: string, labels: string[]) {
+    const session: Session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: neo4j.session.WRITE,
+    });
+
+    let query = '';
+    labels.forEach((l) => {
+      query += `:${l}`;
+    });
+
+    let cypher = `MATCH (p)
+    WHERE ID(p)=${id}
+    SET p${query}`;
+    console.log(cypher);
+    await session.run(cypher);
+    session.close();
   }
 
   clear() {

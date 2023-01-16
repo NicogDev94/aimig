@@ -97,22 +97,6 @@ export const appDatasSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(fetchAll.fulfilled, (state, action) => {
-      // Add user to the state array
-      var options: any = getOptions();
-      if (state.network) {
-        // state.network.setData({ nodes: state.nodes, edges: state.edges });
-      } else {
-        const container = document.getElementById('mynetwork');
-        if (container) {
-          const network = new Network(
-            container,
-            { nodes: state.nodes, edges: state.edges },
-            options,
-          );
-          state.network = network;
-        }
-      }
-
       state.loading = false;
     });
   },

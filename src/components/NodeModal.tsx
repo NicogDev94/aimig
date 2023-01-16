@@ -4,45 +4,14 @@ import {
   subscribeToEvent,
   unSubscribeToEvent,
 } from '../helpers/custom-event.helper';
+import neo4jService from '../services/neo4j.service';
 
-export default function NodeModal() {
-  const [displayModal, setDisplayModal] = useState<boolean>(false);
-  const [node, setNode] = useState<any>({});
-  const [addNodeData, setAddNodeData] = useState<any>(null);
-
-  const handleId = (e: any) => {
-    setNode({ ...node, id: e.target.value });
-  };
-  const handleLabel = (e: any) => {
-    setNode({ ...node, label: e.target.value });
-  };
-
-  const handleSaveNode = () => {
-    const cloneData = { ...addNodeData.data };
-    cloneData.id = node.id;
-    cloneData.label = node.label;
-    console.log(cloneData)
-    addNodeData.callback(cloneData);
-    setDisplayModal(false);
-  };
-
-  const handleAddNodeCallback = (event: any) => {
-    const { detail } = event;
-    setNode({ ...node, id: detail.data.id, label: detail.data.label });
-    setAddNodeData(detail);
-    setDisplayModal(true);
-  };
-
-  useEffect(() => {
-    subscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
-    return () => {
-      unSubscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
-    };
-  }, []);
+export default function Modal() {
+  
 
   return (
     <>
-      {displayModal && (
+      {false && (
         <div
           style={{
             position: 'absolute',
@@ -66,17 +35,7 @@ export default function NodeModal() {
               gap: 10,
             }}
           >
-            <div>
-              Node id:
-              <input value={node.id} type={'text'} onChange={handleId} />
-            </div>
-            <div>
-              Label:
-              <input value={node.label} type={'text'} onChange={handleLabel} />
-            </div>
-            <button style={{ margin: 'auto' }} onClick={handleSaveNode}>
-              Save node
-            </button>
+           
           </div>
         </div>
       )}
