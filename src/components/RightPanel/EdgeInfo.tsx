@@ -1,32 +1,42 @@
 import React, { useState } from 'react';
 import { Network } from 'vis-network';
+import neo4jService from '../../services/neo4j.service';
 
 interface IEdgeInfoProps {
   edge: any;
   setEdge: React.Dispatch<any>;
   network: Network;
+  edgeData: any;
 }
 
-export default function EdgeInfo({ edge, setEdge, network }: IEdgeInfoProps) {
+export default function EdgeInfo({
+  edge,
+  setEdge,
+  network,
+  edgeData,
+}: IEdgeInfoProps) {
   const [editionMode, setEditionMode] = useState<boolean>(false);
   const [newProperty, setNewProperty] = useState<any>({});
 
   // TODO manage label remove whe updating one
   // (at the moment, only add a new one)
-  const handleSaveNode = async () => {
-    const cloneData: any = {};
-    // { ...addNodeData.data };
-    cloneData.id = edge.id;
-    cloneData.label = edge.label;
-    cloneData.properties = edge.properties;
-    // addNodeData.callback(cloneData);
-    // await neo4jService.updateNodeProperties(edge.id, edge.properties);
-    // await neo4jService.updateNodeLabel(edge.id, [edge.label]);
+  const handleSaveEdge = async () => {
+    if (edgeData) {
+      const cloneData: any = { ...edgeData.data };
+      cloneData.id = edge.id;
+      cloneData.label = edge.label;
+      cloneData.properties = edge.properties;
+      edgeData.callback(cloneData);
+    }
+    await neo4jService.updateEdgeProperties(edge.id, edge.properties);
+    await neo4jService.updateNodeLabel(edge.id, [edge.label]);
   };
 
+  // FIXME when cancel change without editing graph relation,
+  // edge does not get his old data. (because edgeData is null)
   const cancelEdit = () => {
     network?.disableEditMode();
-    // setEdge({ ...edge, ...addNodeData.data });
+    if (edgeData) setEdge({ ...edge, ...edgeData.data });
     setEditionMode(false);
   };
 
@@ -61,6 +71,11 @@ export default function EdgeInfo({ edge, setEdge, network }: IEdgeInfoProps) {
 
   return (
     <div className="node-item">
+      {editionMode && (
+        <div>
+          Click on the control points and drag them to a node to connect to it.
+        </div>
+      )}
       <div className="node-item-data">
         <span>Id:</span> <span>{edge.id}</span>
       </div>
@@ -140,10 +155,10 @@ export default function EdgeInfo({ edge, setEdge, network }: IEdgeInfoProps) {
         {editionMode ? (
           <div className="flex gap-10">
             <button onClick={cancelEdit}>Cancel</button>
-            <button onClick={() => handleSaveNode()}>Save node</button>
+            <button onClick={() => handleSaveEdge()}>Save edge</button>
           </div>
         ) : (
-          <button onClick={() => handleEdition()}>Edit node</button>
+          <button onClick={() => handleEdition()}>Edit edge</button>
         )}
       </div>
     </div>

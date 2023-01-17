@@ -39,8 +39,10 @@ export function getOptions(settings = defaultSettings) {
       // If you define any of the options below and enabled is undefined, this will be set to true. [false]
       enabled: true,
       addEdge: function (data: any, callback: (data: any) => void) {
-        trigger(EventType.ADD_EDGE, data);
-        callback(data);
+        trigger(EventType.ADD_EDGE, { data, callback });
+      },
+      editEdge: function (data: any, callback: (data: any) => void) {
+        trigger(EventType.EDIT_EDGE, { data, callback });
       },
       addNode: function (data: any, callback: (data: any) => void) {
         trigger(EventType.ADD_NODE, { data, callback });

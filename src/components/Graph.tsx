@@ -31,6 +31,7 @@ export default function Graph() {
   const [node, setNode] = useState<any>(null);
   const [addNodeData, setAddNodeData] = useState<any>(null);
   const [edge, setEdge] = useState<any>(null);
+  const [edgeData, setEdgeData] = useState<any>(null);
 
   const handleOnCLick = (data: any) => {
     dispatch(setSelections(data));
@@ -80,12 +81,21 @@ export default function Graph() {
     setAddNodeData(detail);
   };
 
+  const handleEditEdge = async ({ detail }: any) => {
+    console.log('edit edge');
+    console.log(detail);
+    await neo4jService.updateEdgeLinks(edge, detail.data);
+    setEdgeData(detail);
+  };
+
   useEffect(() => {
     subscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
+    subscribeToEvent(EventType.EDIT_EDGE, handleEditEdge);
     return () => {
       unSubscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
+      unSubscribeToEvent(EventType.EDIT_EDGE, handleEditEdge);
     };
-  }, []);
+  }, [edge]);
 
   useEffect(() => {
     if (selectedNodes.length) setNode({ ...selectedNodes[0] });
@@ -107,6 +117,7 @@ export default function Graph() {
           setNode={setNode}
           edge={edge}
           setEdge={setEdge}
+          edgeData={edgeData}
         />
       )}
     </>

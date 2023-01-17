@@ -51,6 +51,7 @@ interface IRightPanelProps {
   addNodeData: any;
   edge: any;
   setEdge: React.Dispatch<any>;
+  edgeData: any;
 }
 
 export default function RightPanel({
@@ -59,6 +60,7 @@ export default function RightPanel({
   addNodeData,
   edge,
   setEdge,
+  edgeData,
 }: IRightPanelProps) {
   const { network } = useAppSelector((state) => state.appDatas);
 
@@ -73,7 +75,14 @@ export default function RightPanel({
             addNodeData={addNodeData}
           />
         )}
-        {edge && <EdgeInfo network={network!} edge={edge} setEdge={setEdge} />}
+        {edge && (
+          <EdgeInfo
+            edgeData={edgeData}
+            network={network!}
+            edge={edge}
+            setEdge={setEdge}
+          />
+        )}
       </RightPanelContainer>
     </>
   );
