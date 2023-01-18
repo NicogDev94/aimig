@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../hooks';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  appDataState,
+  networkDataState,
+  useAppDispatch,
+  useAppSelector,
+} from '../hooks';
 import {
   setEdges,
   setIsolatedMode,
-  setNetwork,
   setNodes,
   setSelections,
 } from '../slices/app.slice';
@@ -17,6 +21,19 @@ import {
   EventType,
   unSubscribeToEvent,
 } from '../helpers/custom-event.helper';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  setAddEdgeMode,
+  setAddNodeMode,
+  setEditEdgeMode,
+  setEditMode,
+  setEditNodeMode,
+  setNetwork,
+} from '../slices/network.slice';
+import { uniqBy } from 'lodash';
+import { useNetworkClickEvents } from '../hooks/useNetworkClickEvents';
+import { useNetworkModeEvents } from '../hooks/useNetworkModeEvents';
+import ActionButtons from './ActionButtons';
 
 const GraphContainer = styled.div`
   width: 100vw;
@@ -24,25 +41,16 @@ const GraphContainer = styled.div`
 `;
 
 export default function Graph() {
+  // selector
+  const { nodes, edges } = useAppSelector(appDataState);
+  const { network } = useAppSelector(networkDataState);
+
+  // Custom hook
+  useNetworkClickEvents();
+  const { node, addNodeData, edge, edgeData, setEdge, setNode } =
+    useNetworkModeEvents();
+
   const dispatch = useAppDispatch();
-  const { network, nodes, edges, selectedNodes, selectedEdges } =
-    useAppSelector((state) => state.appDatas);
-
-  const [node, setNode] = useState<any>(null);
-  const [addNodeData, setAddNodeData] = useState<any>(null);
-  const [edge, setEdge] = useState<any>(null);
-  const [edgeData, setEdgeData] = useState<any>(null);
-
-  const handleOnCLick = (data: any) => {
-    dispatch(setSelections(data));
-  };
-
-  const handleDoubleClick = async (data: any) => {
-    const res = await neo4jService.getNodeAndRelations(data.nodes[0]);
-    dispatch(setNodes(res));
-    dispatch(setEdges(res));
-    dispatch(setIsolatedMode(true));
-  };
 
   useEffect(() => {
     // Add user to the state array
@@ -59,53 +67,13 @@ export default function Graph() {
         );
         dispatch(setNetwork(network));
       }
+      
     }
   }, [nodes, edges, network]);
-  useEffect(() => {
-    if (network) {
-      network.on('click', handleOnCLick);
-      network.on('doubleClick', handleDoubleClick);
-    }
-    return () => {
-      if (network) {
-        network.off('click', handleOnCLick);
-        network.off('doubleClick', handleDoubleClick);
-      }
-    };
-  }, [network]);
-
-  const handleAddNodeCallback = (event: any) => {
-    console.log('edit');
-    const { detail } = event;
-    setNode({ ...node, ...detail.data });
-    setAddNodeData(detail);
-  };
-
-  const handleEditEdge = async ({ detail }: any) => {
-    console.log('edit edge');
-    console.log(detail);
-    await neo4jService.updateEdgeLinks(edge, detail.data);
-    setEdgeData(detail);
-  };
-
-  useEffect(() => {
-    subscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
-    subscribeToEvent(EventType.EDIT_EDGE, handleEditEdge);
-    return () => {
-      unSubscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);
-      unSubscribeToEvent(EventType.EDIT_EDGE, handleEditEdge);
-    };
-  }, [edge]);
-
-  useEffect(() => {
-    if (selectedNodes.length) setNode({ ...selectedNodes[0] });
-    else setNode(null);
-    if (selectedEdges.length) setEdge({ ...selectedEdges[0] });
-    else setEdge(null);
-  }, [selectedNodes, selectedEdges]);
 
   return (
     <>
+      <ActionButtons node={node} edge={edge} />
       <GraphContainer
         id="mynetwork"
         style={{ width: '100vw', height: '100vh' }}

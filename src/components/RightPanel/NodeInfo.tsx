@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Network } from 'vis-network';
+import { createNode } from '../../helpers/data-creation.helper';
+import { networkDataState, useAppDispatch, useAppSelector } from '../../hooks';
 import neo4jService from '../../services/neo4j.service';
+import { setAddNodeMode, setEditNodeMode } from '../../slices/network.slice';
 
 interface INodeInfoProps {
   node: any;
@@ -15,8 +18,10 @@ export default function NodeInfo({
   addNodeData,
   network,
 }: INodeInfoProps) {
-  const [editionMode, setEditionMode] = useState<boolean>(false);
-  const [newProperty, setNewProperty] = useState<any>({});
+  const [newProperty, setNewProperty] = useState<any>({ key: '', value: '' });
+
+  const dispatch = useAppDispatch();
+  const { addNodeMode, editNodeMode } = useAppSelector(networkDataState);
 
   // TODO manage label remove whe updating one
   // (at the moment, only add a new one)
@@ -24,22 +29,23 @@ export default function NodeInfo({
     const cloneData = { ...addNodeData.data };
     cloneData.id = node.id;
     cloneData.label = node.label;
+    cloneData.labels = [node.label];
     cloneData.properties = node.properties;
-    addNodeData.callback(cloneData);
-    await neo4jService.updateNodeProperties(node.id, node.properties);
-    await neo4jService.updateNodeLabel(node.id, [node.label]);
+    const createdNode = createNode(cloneData);
+    addNodeData.callback({ ...cloneData, ...createdNode });
+    if (addNodeMode) {
+      neo4jService.createNode(createdNode);
+      dispatch(setAddNodeMode(false));
+    } else {
+      await neo4jService.updateNodeProperties(node.properties.id, node.properties);
+      await neo4jService.updateNodeLabel(node.properties.id, [node.label]);
+      dispatch(setEditNodeMode(false));
+    }
   };
 
   const cancelEdit = () => {
-    network?.disableEditMode();
     setNode({ ...node, ...addNodeData.data });
-    setEditionMode(false);
-  };
-
-  const handleEdition = () => {
-    network?.enableEditMode();
-    network?.editNode();
-    setEditionMode(true);
+    dispatch(setEditNodeMode(false));
   };
 
   const handleLabel = (e: any) => {
@@ -55,7 +61,7 @@ export default function NodeInfo({
       ...node,
       properties: { ...node.properties, [newProperty.key]: newProperty.value },
     });
-    setNewProperty({});
+    setNewProperty({ key: '', value: '' });
   };
 
   const handleRemoveProperty = (key: string) => {
@@ -65,6 +71,8 @@ export default function NodeInfo({
     });
   };
 
+  const canEdit = addNodeMode || editNodeMode;
+
   return (
     <div className="node-item">
       <div className="node-item-data">
@@ -72,7 +80,7 @@ export default function NodeInfo({
       </div>
       <div className="node-item-data">
         <span className="flex-1">Label:</span>{' '}
-        {editionMode ? (
+        {canEdit ? (
           <input
             type={'text'}
             className="text-right flex-3"
@@ -85,36 +93,37 @@ export default function NodeInfo({
       </div>
       <div className="node-item-properties">
         <span>Properties:</span>
-        {Object.keys(node.properties).map((key) => {
-          if (node.properties[key] === null) return;
-          return (
-            <div className="flex justify-between ml-2">
-              <div className="flex-1">{key}</div>
-              {editionMode ? (
-                <>
-                  <input
-                    className="text-right w-100 flex-3"
-                    onChange={(e: any) =>
-                      handleOnChangeProperty(key, e.target.value)
-                    }
-                    value={node.properties[key]}
-                  />
-                  <button
-                    onClick={() => handleRemoveProperty(key)}
-                    style={{ background: 'red' }}
-                    title="remove"
-                  >
-                    X
-                  </button>
-                </>
-              ) : (
-                <div>{`${node.properties[key]}`}</div>
-              )}
-            </div>
-          );
-        })}
+        {node.properties &&
+          Object.keys(node.properties).map((key) => {
+            if (node.properties[key] === null) return;
+            return (
+              <div className="flex justify-between ml-2 mb-2">
+                <div className="flex-1 mr-3">{key}</div>
+                {canEdit ? (
+                  <>
+                    <input
+                      className="text-right w-100 flex-3"
+                      onChange={(e: any) =>
+                        handleOnChangeProperty(key, e.target.value)
+                      }
+                      value={node.properties[key]}
+                    />
+                    <button
+                      onClick={() => handleRemoveProperty(key)}
+                      style={{ background: 'red' }}
+                      title="remove"
+                    >
+                      X
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-ellipsis">{`${node.properties[key]}`}</div>
+                )}
+              </div>
+            );
+          })}
       </div>
-      {editionMode && (
+      {canEdit && (
         <div className="f-column gap-5 mt-2">
           <div className="fw-700">Add new property</div>
           <div>
@@ -123,6 +132,7 @@ export default function NodeInfo({
               type={'text'}
               className="w-100"
               placeholder="name of the property"
+              value={newProperty.key}
               onChange={(e: any) =>
                 setNewProperty({
                   ...newProperty,
@@ -137,6 +147,7 @@ export default function NodeInfo({
               type={'text'}
               placeholder="value of the property"
               className="w-100"
+              value={newProperty.value}
               onChange={(e: any) =>
                 setNewProperty({
                   ...newProperty,
@@ -148,13 +159,11 @@ export default function NodeInfo({
           <button onClick={handleAddProperty}>Add property</button>
         </div>
       )}
-      {editionMode ? (
+      {canEdit && (
         <div className="flex gap-10">
           <button onClick={cancelEdit}>Cancel</button>
           <button onClick={() => handleSaveNode()}>Save node</button>
         </div>
-      ) : (
-        <button onClick={() => handleEdition()}>Edit node</button>
       )}
     </div>
   );

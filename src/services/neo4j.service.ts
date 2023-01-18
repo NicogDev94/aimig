@@ -1,5 +1,6 @@
 import neo4j from 'neo4j-driver';
 import { Record, QueryResult, Session } from 'neo4j-driver';
+import { stringifyLabels } from '../helpers/data-creation.helper';
 
 let instance: Neo4JService | null;
 
@@ -18,58 +19,88 @@ class Neo4JService {
   }
 
   async getAll() {
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
+    const res = await Promise.all([
+      this.executeQuery('MATCH (m) RETURN DISTINCT  m'),
+      this.executeQuery('MATCH ()-[r]-() RETURN DISTINCT  r'),
+    ]);
 
-    const res: QueryResult = await session.run(
-      'MATCH (m)-[r]-(a) return m,r,a',
+    const nodesResult: QueryResult = res[0];
+    const relationsResult: QueryResult = res[1];
+
+    const nodes = nodesResult.records.reduce(
+      (previous: any, current: Record) => {
+        return [...previous, current.get('m')];
+      },
+      [],
     );
 
-    session.close();
-    return res.records.map((r: Record) => {
-      return { nodes: [r.get('m'), r.get('a')], relation: r.get('r') };
-    });
+    const edges = relationsResult.records.reduce(
+      (previous: any, current: any) => {
+        return [...previous, current.get('r')];
+      },
+      [],
+    );
+    return { nodes, edges };
   }
 
-  async getNodeAndRelations(id: string) {
-    console.log(id);
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
+  async getNodeAndHisRelations(id: string) {
+    let cypher = `MATCH (nFocus)<-[r]->(n) WHERE nFocus.id="${id}" RETURN DISTINCT nFocus,r,n`;
+    const res: QueryResult = await this.executeQuery(cypher);
+    const result = res.records.reduce(
+      (previous: any, current: Record) => {
+        const nodes = [
+          ...previous.nodes,
+          current.get('nFocus'),
+          current.get('n'),
+        ];
+        const edges = [...previous.edges, current.get('r')];
+        return {
+          nodes,
+          edges,
+        };
+      },
+      { nodes: [], edges: [] },
+    );
+    return result;
+  }
+  async createNode(newNode: any) {
+    const stringyfiedLabels = stringifyLabels(newNode.labels);
+
+    const cypher = `CREATE (n${stringyfiedLabels})
+    SET n = $props
+    RETURN n`;
+    const res: QueryResult = await this.executeQuery(cypher, {
+      props: newNode.properties,
     });
 
-    let cypher = `MATCH (nFocus)<-[r]->(n) WHERE ID(nFocus)=${id} RETURN nFocus,r,n`;
-    const res: QueryResult = await session.run(cypher);
-    // load the node with the given nodeId ans also load all its connected nodes
-    session.close();
-    return res.records.map((r: Record) => {
-      return { nodes: [r.get('nFocus'), r.get('n')], relation: r.get('r') };
+    return res;
+  }
+  async createEdge(newEdge: any) {
+    const stringyfiedLabels = stringifyLabels(newEdge.labels);
+
+    const cypher = `MATCH (m),(n)
+  WHERE ID(m)=${newEdge.from} AND ID(n)=${newEdge.to}
+  CREATE (m)-[r${stringyfiedLabels}]->(n)
+    SET r = $props
+    RETURN n`;
+    console.log(cypher);
+    const res: QueryResult = await this.executeQuery(cypher, {
+      props: newEdge.properties,
     });
+
+    return res;
   }
   async updateNodeProperties(id: string, dataToUpdate: any) {
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
     let cypher = `MATCH (p)
-    WHERE ID(p)=${id}
+    WHERE p.id='${id}'
     SET p = $dataToUpdate return p`;
-    console.log(cypher);
-    await session.run(cypher, { dataToUpdate });
-    session.close();
+    await this.executeQuery(cypher, { dataToUpdate });
   }
   async updateEdgeProperties(id: string, dataToUpdate: any) {
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
     let cypher = `MATCH (p)-[r]-(m)
-    WHERE ID(r)=${id}
+    WHERE r.id='${id}'
     SET r = $dataToUpdate RETURN r`;
-    await session.run(cypher, { dataToUpdate });
-    session.close();
+    await this.executeQuery(cypher, { dataToUpdate });
   }
 
   // TODO we can use apoc procedure instead of this query
@@ -77,79 +108,45 @@ class Neo4JService {
   // relation is deleted and then another one is created so the internal id change!
   // should use parameters id on nodes/relations to avoid this?
   async updateEdgeLinks(oldEdge: any, newEdge: any) {
-    console.log(oldEdge, newEdge);
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
     // deleting old relation
     const cypherDelete = `MATCH (m)-[r]->(l)
-    WHERE ID(r)=${Number.parseInt(newEdge.id)}
+    WHERE r.id='${oldEdge.properties.id}'
     DELETE r`;
-    await session.run(cypherDelete);
-    session.close();
+    await this.executeQuery(cypherDelete);
 
-    const session2: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
-    let cypherCreate;
-    let res: QueryResult;
     // creating new relation and copy old relation properties
-    cypherCreate = `MATCH (m),(l)
-    WHERE ID(m)=${Number.parseInt(newEdge.from)} AND ID(l)=${Number.parseInt(
-      newEdge.to,
-    )}
-    MERGE (m)-[r:${newEdge.label.toUpperCase()}]-(l)
+    const cypherCreate = `MATCH (m),(l)
+    WHERE ID(m)=${newEdge.from} AND ID(l)=${newEdge.to}
+    MERGE (m)-[r:${newEdge.label}]-(l)
     SET r = $props
     RETURN r`;
-    res = await session2.run(cypherCreate, {
-      props: oldEdge.properties,
-    });
 
-    session2.close();
-    console.log(res);
+    return await this.executeQuery(cypherCreate, { props: oldEdge.properties });
   }
   async updateNodeLabel(id: string, labels: string[]) {
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
-
-    let query = '';
-    labels.forEach((l) => {
-      query += `:${l}`;
-    });
+    const stringyfiedLabels = stringifyLabels(labels);
 
     let cypher = `MATCH (p)
-    WHERE ID(p)=${id}
-    SET p${query}`;
-    console.log(cypher);
-    await session.run(cypher);
-    session.close();
-  }
-  async updateEdgeLabel(id: string, labels: string[]) {
-    const session: Session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: neo4j.session.WRITE,
-    });
+    WHERE p.id='${id}'
+    SET p${stringyfiedLabels}`;
 
-    let query = '';
-    labels.forEach((l) => {
-      query += `:${l}`;
-    });
-
-    let cypher = `MATCH (p)-[r]-(m)
-    WHERE ID(r)=${id}
-    SET r${query}`;
-    console.log(cypher);
-    await session.run(cypher);
-    session.close();
+    return await this.executeQuery(cypher);
   }
 
   clear() {
     instance = null;
     if (this.driver) this.driver.close();
+  }
+
+  async executeQuery(query: string, params: any = undefined) {
+    console.log('[DEBUG - QUERY / PARAMS]', query, params);
+    const session: Session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: neo4j.session.WRITE,
+    });
+    const res = await session.run(query, params);
+    session.close();
+    return res;
   }
 }
 

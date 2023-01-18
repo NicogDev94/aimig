@@ -2,6 +2,7 @@ export enum EventType {
   ADD_EDGE,
   EDIT_EDGE,
   ADD_NODE,
+  EDIT_NODE,
 }
 
 function subscribeToEvent(eventType: any, listener: any) {

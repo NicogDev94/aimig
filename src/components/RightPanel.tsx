@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useAppSelector } from '../hooks';
+import { networkDataState, useAppSelector } from '../hooks';
 import EdgeInfo from './RightPanel/EdgeInfo';
 import NodeInfo from './RightPanel/NodeInfo';
 
@@ -62,7 +62,7 @@ export default function RightPanel({
   setEdge,
   edgeData,
 }: IRightPanelProps) {
-  const { network } = useAppSelector((state) => state.appDatas);
+  const { network } = useAppSelector(networkDataState);
 
   return (
     <>

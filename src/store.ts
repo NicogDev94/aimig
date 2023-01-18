@@ -1,5 +1,6 @@
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import appReducer from './slices/app.slice';
+import networkReducer from './slices/network.slice';
 // ...
 const customizedMiddleware = getDefaultMiddleware({
   serializableCheck: false,
@@ -7,6 +8,7 @@ const customizedMiddleware = getDefaultMiddleware({
 export const store = configureStore({
   reducer: {
     appDatas: appReducer,
+    networkData: networkReducer,
   },
   middleware: customizedMiddleware,
 });

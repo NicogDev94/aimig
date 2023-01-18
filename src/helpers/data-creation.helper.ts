@@ -11,7 +11,7 @@ export function createNode(n: any): INode {
     n.properties,
   );
   return {
-    id: n.elementId,
+    id: n.elementId || n.id,
     label: n.labels[0],
     labels: n.labels,
     group: n.labels[0] ? n.labels[0].toLowerCase() : null,
@@ -24,11 +24,18 @@ export function createEdge(e: any): any {
   container.classList.add('node-hover-info');
   container.innerHTML = renderHoverInfo(e.id, e.type, [e.type], e.properties);
   return {
-    from: e.startNodeElementId,
-    to: e.endNodeElementId,
-    id: e.elementId,
-    label: e.type,
+    from: e.startNodeElementId || e.from,
+    to: e.endNodeElementId || e.to,
+    id: e.elementId || e.id,
+    label: e.type || e.label,
+    labels: e.labels || [e.label],
     properties: e.properties,
     title: container,
   };
+}
+
+export function stringifyLabels(labels: string[]) {
+  return labels.reduce((prev: string, current: string) => {
+    return prev + ':' + current;
+  }, '');
 }
