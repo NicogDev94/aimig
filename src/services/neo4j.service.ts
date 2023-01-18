@@ -123,6 +123,9 @@ class Neo4JService {
 
     return await this.executeQuery(cypherCreate, { props: oldEdge.properties });
   }
+
+  // FIXME this should remove old labels and add new one
+  // atm only add labels
   async updateNodeLabel(id: string, labels: string[]) {
     const stringyfiedLabels = stringifyLabels(labels);
 
