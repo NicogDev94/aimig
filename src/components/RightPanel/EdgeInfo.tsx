@@ -48,13 +48,6 @@ export default function EdgeInfo({
     }
   };
 
-  // FIXME when cancel change without editing graph relation,
-  // edge does not get his old data. (because edgeData is null)
-  const cancelEdit = () => {
-    if (edgeData) setEdge({ ...edge, ...edgeData.data });
-    dispatch(setEditEdgeMode(false));
-  };
-
   const handleLabel = (e: any) => {
     setEdge({ ...edge, label: e.target.value });
   };
@@ -170,7 +163,6 @@ export default function EdgeInfo({
         )}
         {canEdit && (
           <div className="flex gap-10">
-            <button onClick={cancelEdit}>Cancel</button>
             <button onClick={() => handleSaveEdge()}>Save edge</button>
           </div>
         )}

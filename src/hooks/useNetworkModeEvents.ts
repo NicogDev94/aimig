@@ -6,11 +6,8 @@ import {
 } from '../helpers/custom-event.helper';
 import neo4jService from '../services/neo4j.service';
 import { v4 as uuidv4 } from 'uuid';
-import { appDataState, useAppSelector } from '../hooks';
 
 export function useNetworkModeEvents() {
-  const { selectedNodes, selectedEdges } = useAppSelector(appDataState);
-
   const [addNodeData, setAddNodeData] = useState<any>(null);
   const [node, setNode] = useState<any>(null);
   const [edge, setEdge] = useState<any>(null);
@@ -44,12 +41,7 @@ export function useNetworkModeEvents() {
     setEdge({ properties: { id: uuidv4() }, ...detail.data });
     setEdgeData(detail);
     detail.callback(detail.data);
-}, []);
-
-  useEffect(() => {
-    if (selectedNodes.length) setNode({ ...selectedNodes[0] });
-    if (selectedEdges.length) setEdge({ ...selectedEdges[0] });
-  }, [selectedNodes, selectedEdges]);
+  }, []);
 
   useEffect(() => {
     subscribeToEvent(EventType.ADD_NODE, handleAddNodeCallback);

@@ -58,6 +58,15 @@ export const appDatasSlice = createSlice({
       state.nodes = update(state.nodes, { $push: [action.payload] });
       // state.network?.setData({ nodes: state.nodes, edges: state.edges });
     },
+    updateNode: (state: AppState, action: PayloadAction<any>) => {
+      const index = state.nodes.findIndex(
+        (n) => n.properties.id === action.payload.properties.idF,
+      );
+      if (index !== -1)
+        state.nodes = update(state.nodes, {
+          [index]: { $merge: { ...action.payload } },
+        });
+    },
     setIsolatedMode: (state: AppState, action: PayloadAction<boolean>) => {
       console.log('hello');
       state.isolatedMode = action.payload;
@@ -87,7 +96,13 @@ export const appDatasSlice = createSlice({
   },
 });
 
-export const { addNode, setIsolatedMode, setEdges, setNodes, setSelections } =
-  appDatasSlice.actions;
+export const {
+  addNode,
+  updateNode,
+  setIsolatedMode,
+  setEdges,
+  setNodes,
+  setSelections,
+} = appDatasSlice.actions;
 
 export default appDatasSlice.reducer;

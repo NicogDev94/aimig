@@ -27,10 +27,14 @@ export function useNetworkClickEvents() {
   const handleDoubleClick = useCallback(
     async (data: any) => {
       const node = nodes.find((n) => n.id === data.nodes[0]);
-      const res = await neo4jService.getNodeAndHisRelations(node.properties.id);
-      dispatch(setNodes(uniqBy(res.nodes, (n) => n.elementId)));
-      dispatch(setEdges(uniqBy(res.edges, (e) => e.elementId)));
-      dispatch(setIsolatedMode(true));
+      if (node && node.properties.id) {
+        const res = await neo4jService.getNodeAndHisRelations(
+          node.properties.id,
+        );
+        dispatch(setNodes(uniqBy(res.nodes, (n) => n.elementId)));
+        dispatch(setEdges(uniqBy(res.edges, (e) => e.elementId)));
+        dispatch(setIsolatedMode(true));
+      }
     },
     [nodes],
   );

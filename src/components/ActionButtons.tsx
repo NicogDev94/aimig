@@ -11,12 +11,19 @@ import {
 interface IActionButtonsProps {
   node: any;
   edge: any;
+  addNodeData: any;
+  edgeData: any;
 }
 
-export default function ActionButtons({ node, edge }: IActionButtonsProps) {
+export default function ActionButtons({
+  node,
+  edge,
+  addNodeData,
+  edgeData,
+}: IActionButtonsProps) {
   const dispatch = useAppDispatch();
 
-  const { addEdgeMode, addNodeMode, editEdgeMode, editMode } =
+  const { addEdgeMode, addNodeMode, editEdgeMode, editMode, editNodeMode } =
     useAppSelector(networkDataState);
 
   const onClickAddEdge = useCallback(() => {
@@ -33,12 +40,28 @@ export default function ActionButtons({ node, edge }: IActionButtonsProps) {
   const onClickNodeEdition = useCallback(() => {
     dispatch(setEditNodeMode(true));
   }, []);
+
   const onClickEdgeEdition = useCallback(() => {
     dispatch(setEditEdgeMode(true));
   }, []);
 
+  // FIXME when cancel change without editing graph relation,
+  // edge does not get his old data. (because edgeData is null)
+  const onClickCancel = useCallback(() => {
+    if (edgeData) edgeData.callback(null);
+    if (addNodeData) addNodeData.callback(null);
+    dispatch(setEditMode(false));
+    dispatch(setAddNodeMode(false));
+    dispatch(setEditNodeMode(false));
+    dispatch(setEditEdgeMode(false));
+    dispatch(setAddEdgeMode(false));
+  }, []);
+
   return (
     <div style={{ top: 5, left: 5, zIndex: 99 }} className="absolute">
+      {(addEdgeMode || addNodeMode || editEdgeMode || editNodeMode) && (
+        <button onClick={onClickCancel}>Cancel</button>
+      )}
       {!editMode && (
         <button onClick={onClickEdit}>
           <i className="fa-solid fa-pen mr-2"></i>Edit
@@ -57,7 +80,7 @@ export default function ActionButtons({ node, edge }: IActionButtonsProps) {
             </button>
           )}
 
-          {node && (
+          {node && !addEdgeMode && !addNodeMode && (
             <button onClick={() => onClickNodeEdition()}>
               <i className="fa-solid fa-pen mr-2"></i>Edit node
             </button>

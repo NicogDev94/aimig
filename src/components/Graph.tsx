@@ -42,8 +42,9 @@ const GraphContainer = styled.div`
 
 export default function Graph() {
   // selector
-  const { nodes, edges } = useAppSelector(appDataState);
-  const { network } = useAppSelector(networkDataState);
+  const { nodes, edges, selectedEdges, selectedNodes } =
+    useAppSelector(appDataState);
+  const { network, addNodeMode } = useAppSelector(networkDataState);
 
   // Custom hook
   useNetworkClickEvents();
@@ -51,6 +52,13 @@ export default function Graph() {
     useNetworkModeEvents();
 
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (selectedNodes.length) setNode({ ...selectedNodes[0] });
+    else if (!addNodeMode) setNode(null);
+    if (selectedEdges.length) setEdge({ ...selectedEdges[0] });
+    else setEdge(null);
+  }, [selectedNodes, selectedEdges]);
 
   useEffect(() => {
     // Add user to the state array
@@ -67,13 +75,17 @@ export default function Graph() {
         );
         dispatch(setNetwork(network));
       }
-      
     }
   }, [nodes, edges, network]);
 
   return (
     <>
-      <ActionButtons node={node} edge={edge} />
+      <ActionButtons
+        addNodeData={addNodeData}
+        edgeData={edgeData}
+        node={node}
+        edge={edge}
+      />
       <GraphContainer
         id="mynetwork"
         style={{ width: '100vw', height: '100vh' }}

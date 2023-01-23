@@ -3,6 +3,7 @@ import { Network } from 'vis-network';
 import { createNode } from '../../helpers/data-creation.helper';
 import { networkDataState, useAppDispatch, useAppSelector } from '../../hooks';
 import neo4jService from '../../services/neo4j.service';
+import { addNode, updateNode } from '../../slices/app.slice';
 import { setAddNodeMode, setEditNodeMode } from '../../slices/network.slice';
 
 interface INodeInfoProps {
@@ -36,16 +37,16 @@ export default function NodeInfo({
     if (addNodeMode) {
       neo4jService.createNode(createdNode);
       dispatch(setAddNodeMode(false));
+      dispatch(addNode(createdNode));
     } else {
-      await neo4jService.updateNodeProperties(node.properties.id, node.properties);
+      await neo4jService.updateNodeProperties(
+        node.properties.id,
+        node.properties,
+      );
       await neo4jService.updateNodeLabel(node.properties.id, [node.label]);
       dispatch(setEditNodeMode(false));
+      dispatch(updateNode(createdNode))
     }
-  };
-
-  const cancelEdit = () => {
-    setNode({ ...node, ...addNodeData.data });
-    dispatch(setEditNodeMode(false));
   };
 
   const handleLabel = (e: any) => {
@@ -161,7 +162,6 @@ export default function NodeInfo({
       )}
       {canEdit && (
         <div className="flex gap-10">
-          <button onClick={cancelEdit}>Cancel</button>
           <button onClick={() => handleSaveNode()}>Save node</button>
         </div>
       )}
