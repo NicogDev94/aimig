@@ -102,7 +102,7 @@ export default function EdgeInfo({
         {Object.keys(edge.properties).map((key) => {
           if (edge.properties[key] === null) return;
           return (
-            <div className="flex justify-between ml-2">
+            <div key={key} className="flex justify-between ml-2">
               <div className="flex-1 mr-3">{key}</div>
               {canEdit ? (
                 <>

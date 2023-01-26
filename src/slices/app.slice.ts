@@ -31,7 +31,6 @@ export const fetchAll = createAsyncThunk(
     const res = await neo4jService.getAll();
     dispatch(setNodes(res.nodes));
     dispatch(setEdges(res.edges));
-    console.log(res);
     return res;
   },
 );
@@ -68,7 +67,6 @@ export const appDatasSlice = createSlice({
         });
     },
     setIsolatedMode: (state: AppState, action: PayloadAction<boolean>) => {
-      console.log('hello');
       state.isolatedMode = action.payload;
     },
     setSelections: (state: AppState, action: PayloadAction<any>) => {

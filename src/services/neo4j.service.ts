@@ -1,5 +1,6 @@
 import neo4j from 'neo4j-driver';
 import { Record, QueryResult, Session } from 'neo4j-driver';
+import { v4 } from 'uuid';
 import { stringifyLabels } from '../helpers/data-creation.helper';
 
 let instance: Neo4JService | null;
@@ -65,6 +66,9 @@ class Neo4JService {
   }
   async createNode(newNode: any) {
     const stringyfiedLabels = stringifyLabels(newNode.labels);
+    newNode.properties = newNode.properties
+      ? { ...newNode.properties, id: v4() }
+      : { id: v4() };
 
     const cypher = `CREATE (n${stringyfiedLabels})
     SET n = $props

@@ -31,12 +31,14 @@ export function useNetworkClickEvents() {
         const res = await neo4jService.getNodeAndHisRelations(
           node.properties.id,
         );
-        dispatch(setNodes(uniqBy(res.nodes, (n) => n.elementId)));
-        dispatch(setEdges(uniqBy(res.edges, (e) => e.elementId)));
         dispatch(setIsolatedMode(true));
+        const nodes = uniqBy(res.nodes, (n) => n.elementId);
+        const edges = uniqBy(res.edges, (e) => e.elementId);
+        dispatch(setNodes(nodes));
+        dispatch(setEdges(edges));
       }
     },
-    [nodes],
+    [nodes, network],
   );
 
   useEffect(() => {

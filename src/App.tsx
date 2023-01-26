@@ -26,7 +26,6 @@ function App() {
   useEffect(() => {});
 
   const handleBackPlainView = () => {
-    console.log('OK');
     dispatch(setIsolatedMode(false));
   };
 

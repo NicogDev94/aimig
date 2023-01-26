@@ -52,6 +52,13 @@ export const networkSlice = createSlice({
         ? state.network!.editNode()
         : state.network!.disableEditMode();
     },
+    setNetworkData: (
+      state: NetworkState,
+      action: PayloadAction<{ nodes: any[]; edges: any[] }>,
+    ) => {
+      const { nodes, edges } = action.payload;
+      state.network!.setData({ nodes: nodes, edges: edges });
+    },
   },
 });
 
@@ -62,6 +69,7 @@ export const {
   setEditEdgeMode,
   setEditNodeMode,
   setEditMode,
+  setNetworkData,
 } = networkSlice.actions;
 
 export default networkSlice.reducer;

@@ -36,8 +36,8 @@ export default function NodeInfo({
     addNodeData.callback({ ...cloneData, ...createdNode });
     if (addNodeMode) {
       neo4jService.createNode(createdNode);
-      dispatch(setAddNodeMode(false));
       dispatch(addNode(createdNode));
+      dispatch(setAddNodeMode(false));
     } else {
       await neo4jService.updateNodeProperties(
         node.properties.id,
@@ -45,7 +45,7 @@ export default function NodeInfo({
       );
       await neo4jService.updateNodeLabel(node.properties.id, [node.label]);
       dispatch(setEditNodeMode(false));
-      dispatch(updateNode(createdNode))
+      dispatch(updateNode(createdNode));
     }
   };
 
@@ -98,7 +98,7 @@ export default function NodeInfo({
           Object.keys(node.properties).map((key) => {
             if (node.properties[key] === null) return;
             return (
-              <div className="flex justify-between ml-2 mb-2">
+              <div key={key} className="flex justify-between ml-2 mb-2">
                 <div className="flex-1 mr-3">{key}</div>
                 {canEdit ? (
                   <>
