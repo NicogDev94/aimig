@@ -17,7 +17,9 @@ const IsolatedModeActions = styled.div`
 function App() {
   const dispatch = useAppDispatch();
 
-  const { loading, isolatedMode } = useAppSelector((state) => state.appDatas);
+  const { loading, isolatedMode, nodes, edges } = useAppSelector(
+    (state) => state.appDatas,
+  );
 
   useEffect(() => {
     if (!isolatedMode) dispatch(fetchAll());
@@ -37,7 +39,7 @@ function App() {
           <button onClick={handleBackPlainView}>Back</button>
         </IsolatedModeActions>
       )}
-      <Graph />
+      {nodes.length && edges.length && <Graph />}
       {loading && (
         <div style={{ position: 'absolute', top: '45vh', left: '45vw' }}>
           Loading datas...

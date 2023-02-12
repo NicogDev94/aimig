@@ -42,20 +42,16 @@ export default function Graph() {
   useEffect(() => {
     // Add user to the state array
     var options: any = getOptions();
-    if (network && !addNodeMode) {
-      dispatch(setNetworkData({ nodes, edges }));
-    } else {
-      const container = document.getElementById('mynetwork');
-      if (container) {
-        const network = new Network(
-          container,
-          { nodes: nodes, edges: edges },
-          options,
-        );
-        dispatch(setNetwork(network));
-      }
+    const container = document.getElementById('mynetwork');
+    if (container) {
+      const network = new Network(
+        container,
+        { nodes: nodes, edges: edges },
+        options,
+      );
+      dispatch(setNetwork(network));
     }
-  }, [nodes, edges, network]);
+  }, []);
 
   return (
     <>

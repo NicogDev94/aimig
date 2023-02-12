@@ -24,7 +24,7 @@ export default function NodeInfo({
   const dispatch = useAppDispatch();
   const { addNodeMode, editNodeMode } = useAppSelector(networkDataState);
 
-  // TODO manage label remove whe updating one
+  // TODO manage label remove the updating one
   // (at the moment, only add a new one)
   const handleSaveNode = async () => {
     const cloneData = { ...addNodeData.data };

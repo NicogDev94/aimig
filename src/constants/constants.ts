@@ -48,7 +48,6 @@ export function getOptions(settings = defaultSettings) {
         trigger(EventType.ADD_NODE, { data, callback });
       },
       editNode: function (data: any, callback: (data: any) => void) {
-        console.log("edit")
         trigger(EventType.EDIT_NODE, { data, callback });
       },
     },
