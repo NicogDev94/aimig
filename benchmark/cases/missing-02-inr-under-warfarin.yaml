@@ -1,0 +1,50 @@
+id: missing-02-inr-under-warfarin
+category: missing-information
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  The same gap on the bleeding chain. When the INR arrives it is
+  supratherapeutic, so the aggregate rises and the recommendation keeps its key
+  but escalates in urgency.
+
+facts:
+  - {id: med-warfarin, kind: medication, concept: warfarin, observed_at: '2024-01-05'}
+  - {id: med-amiodarone, kind: medication, concept: amiodarone, observed_at: '2024-02-01'}
+
+expect_initial:
+  questions: [question:inr]
+  absent_conclusions: [over_anticoagulation]
+  attributes:
+    bleeding_concern: {level: MODERATE, score: 5}
+  recommendation: {key: anticoagulation_review, urgency: MODERATE}
+
+correction:
+  intent: the INR result has come back and is supratherapeutic
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-inr-45
+        kind: observation
+        concept: inr
+        value: {num: 4.5, unit: ratio}
+        observed_at: '2024-03-01'
+
+expect_after_state:
+  questions: []
+  attributes:
+    over_anticoagulation: {severity: severe}
+    bleeding_concern: {level: HIGH, score: 8}
+  recommendation: {key: anticoagulation_review, urgency: HIGH}
+
+expect_after_diff:
+  retracted: [question:inr]
+  added: [over_anticoagulation, contribution:bleeding:over_anticoagulation]
+  changed:
+    - {key: bleeding_concern, from: {level: MODERATE}, to: {level: HIGH}, verdict: strengthened}
+    - {key: action:anticoagulation_review, from: {urgency: MODERATE}, to: {urgency: HIGH}, verdict: strengthened}
+  why_changed_must_cite:
+    target: bleeding_concern
+    verdict: strengthened
+    facts: [obs-inr-45]
+    rules: [threshold.inr]
+    knowledge: [ka-overanti-bleed]

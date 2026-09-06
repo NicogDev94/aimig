@@ -1,0 +1,62 @@
+id: multihop-01-egfr-to-recommendation
+category: multi-hop
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A four-hop chain: observation -> renal impairment -> risk contribution ->
+  aggregate hypothesis -> recommendation. The corrected eGFR is normal, so the
+  whole renal branch retracts and every hop downstream must be identified as
+  affected — including the recommendation, which is three edges away from the
+  fact that changed.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: obs-k-58, kind: observation, concept: potassium, value: {num: 5.8, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-28, kind: observation, concept: egfr, value: {num: 28, unit: mL/min}, observed_at: '2023-06-14'}
+
+expect_initial:
+  attributes:
+    hyperkalemia_concern: {level: HIGH, score: 8}
+  recommendation: {key: medication_review, urgency: HIGH}
+
+correction:
+  intent: renal function has fully recovered; the current eGFR is 65
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-egfr-65
+        kind: observation
+        concept: egfr
+        value: {num: 65, unit: mL/min}
+        observed_at: '2024-03-01'
+    - op: supersede_fact
+      fact_id: obs-egfr-28
+      by: obs-egfr-65
+      reason: renal function recovered; superseded by the current value
+
+expect_after_state:
+  absent_conclusions: [renal_impairment, contribution:hyperkalemia:renal_impairment]
+  attributes:
+    hyperkalemia_concern: {level: MODERATE, score: 5}
+  recommendation: {key: medication_review, urgency: MODERATE}
+  affected_by:
+    fact_id: obs-egfr-28
+    must_include:
+      - renal_impairment
+      - contribution:hyperkalemia:renal_impairment
+      - hyperkalemia_concern
+      - action:medication_review
+    must_exclude: [hyperkalemia, contribution:hyperkalemia:spironolactone]
+
+expect_after_diff:
+  retracted: [renal_impairment, contribution:hyperkalemia:renal_impairment]
+  unchanged: [hyperkalemia, contribution:hyperkalemia:spironolactone]
+  changed:
+    - {key: hyperkalemia_concern, from: {level: HIGH}, to: {level: MODERATE}, verdict: weakened}
+    - {key: action:medication_review, from: {urgency: HIGH}, to: {urgency: MODERATE}, verdict: weakened}
+  why_changed_must_cite:
+    target: action:medication_review
+    verdict: weakened
+    facts: [obs-egfr-28, obs-egfr-65]
+    rules: [threshold.egfr]
+    knowledge: [ka-renal-hyperk]

@@ -1,0 +1,53 @@
+id: missing-01-potassium-under-spironolactone
+category: missing-information
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  Spironolactone requires potassium monitoring and no potassium result is on
+  file. The engine states the gap as a Question rather than reasoning as if the
+  value were normal. Absence of data is not evidence of absence.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+
+expect_initial:
+  active_conclusions:
+    - question:potassium
+    - contribution:hyperkalemia:spironolactone
+    - hyperkalemia_concern
+    - action:monitor_potassium
+  absent_conclusions: [hyperkalemia]
+  questions: [question:potassium]
+  attributes:
+    hyperkalemia_concern: {level: LOW, score: 3}
+  recommendation: {key: monitor_potassium, urgency: LOW}
+
+correction:
+  intent: the potassium result has come back
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-k-58
+        kind: observation
+        concept: potassium
+        value: {num: 5.8, unit: mmol/L}
+        observed_at: '2024-03-01'
+
+expect_after_state:
+  questions: []
+  active_conclusions: [hyperkalemia, hyperkalemia_concern, action:medication_review]
+  attributes:
+    hyperkalemia: {severity: moderate}
+    hyperkalemia_concern: {level: MODERATE, score: 5}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+expect_after_diff:
+  retracted: [question:potassium, action:monitor_potassium]
+  added: [hyperkalemia, action:medication_review]
+  changed:
+    - {key: hyperkalemia_concern, from: {level: LOW}, to: {level: MODERATE}, verdict: strengthened}
+  why_changed_must_cite:
+    target: hyperkalemia_concern
+    verdict: strengthened
+    facts: [obs-k-58]
+    rules: [threshold.potassium]

@@ -1,0 +1,66 @@
+id: no-change-01-bleeding-unaffected-by-potassium
+category: no-change
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  Both chains are active. A potassium correction rewrites the hyperkalemia
+  branch and must leave the bleeding branch STRUCTURALLY IDENTICAL — same node
+  ids, not merely the same displayed values. Recomputation stays full; what is
+  under test is causal, not algorithmic: a mutation with no dependency path to
+  a conclusion must neither change it nor be cited as a cause of its change.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: obs-k-58, kind: observation, concept: potassium, value: {num: 5.8, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: med-warfarin, kind: medication, concept: warfarin, observed_at: '2024-01-05'}
+  - {id: med-amiodarone, kind: medication, concept: amiodarone, observed_at: '2024-02-01'}
+  - {id: obs-inr-35, kind: observation, concept: inr, value: {num: 3.5, unit: ratio}, observed_at: '2024-03-01'}
+
+expect_initial:
+  attributes:
+    hyperkalemia_concern: {level: MODERATE, score: 5}
+    bleeding_concern: {level: MODERATE, score: 7}
+
+correction:
+  intent: the potassium sample was haemolysed; the repeat is 4.2
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-k-42
+        kind: observation
+        concept: potassium
+        value: {num: 4.2, unit: mmol/L}
+        observed_at: '2024-03-02'
+    - op: supersede_fact
+      fact_id: obs-k-58
+      by: obs-k-42
+      reason: haemolysed sample
+
+expect_after_state:
+  attributes:
+    hyperkalemia_concern: {level: LOW, score: 3}
+    bleeding_concern: {level: MODERATE, score: 7}
+  identical_node_ids:
+    - bleeding_concern
+    - over_anticoagulation
+    - contribution:bleeding:warfarin
+    - contribution:bleeding:amiodarone
+    - contribution:bleeding:over_anticoagulation
+    - action:anticoagulation_review
+  affected_by:
+    fact_id: obs-k-58
+    must_include: [hyperkalemia, hyperkalemia_concern]
+    must_exclude: [bleeding_concern, over_anticoagulation, action:anticoagulation_review]
+
+expect_after_diff:
+  unchanged:
+    - bleeding_concern
+    - over_anticoagulation
+    - action:anticoagulation_review
+  retracted: [hyperkalemia, action:medication_review]
+  added: [action:monitor_potassium]
+  changed:
+    - {key: hyperkalemia_concern, from: {level: MODERATE}, to: {level: LOW}, verdict: weakened}
+  why_changed_must_not_cite:
+    target: bleeding_concern
+    facts: [obs-k-58, obs-k-42]

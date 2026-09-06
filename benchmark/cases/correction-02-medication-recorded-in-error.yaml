@@ -1,0 +1,46 @@
+id: correction-02-medication-recorded-in-error
+category: correction
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A medication was recorded against the wrong patient. Its contribution is
+  retracted and the score falls, but the level does not cross a boundary — so
+  the recommendation keeps its key and its urgency while resting on a strictly
+  smaller set of premises. AIMIG must still report that as a change: the same
+  advice for different reasons is not the same conclusion.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: med-ramipril, kind: medication, concept: ramipril, observed_at: '2024-01-10'}
+  - {id: obs-k-58, kind: observation, concept: potassium, value: {num: 5.8, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-85, kind: observation, concept: egfr, value: {num: 85, unit: mL/min}, observed_at: '2024-03-01'}
+
+expect_initial:
+  attributes:
+    hyperkalemia_concern: {level: MODERATE, score: 7}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+correction:
+  intent: ramipril belongs to another patient's record
+  mutations:
+    - op: invalidate_fact
+      fact_id: med-ramipril
+      reason: recorded against the wrong patient
+
+expect_after_state:
+  absent_conclusions: [contribution:hyperkalemia:ramipril]
+  absent_facts_from_state: [med-ramipril]
+  fact_status: {med-ramipril: invalidated}
+  attributes:
+    hyperkalemia_concern: {level: MODERATE, score: 5}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+expect_after_diff:
+  retracted: [contribution:hyperkalemia:ramipril]
+  changed:
+    - {key: hyperkalemia_concern, from: {score: 7}, to: {score: 5}, verdict: changed}
+    - {key: action:medication_review, verdict: changed}
+  why_changed_must_cite:
+    target: hyperkalemia_concern
+    facts: [med-ramipril]
+    knowledge: [ka-ramipril-hyperk]

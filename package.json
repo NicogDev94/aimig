@@ -8,12 +8,14 @@
   "scripts": {
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "benchmark": "vitest run --silent=false packages/core/test/benchmark-report.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "yaml": "^2.6.1"
   },
   "engines": {
     "node": ">=20"

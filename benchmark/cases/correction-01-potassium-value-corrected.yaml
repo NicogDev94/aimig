@@ -1,0 +1,54 @@
+id: correction-01-potassium-value-corrected
+category: correction
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A corrected potassium result. The qualitative claim weakens two steps at
+  once — severe to mild — and the change propagates to the aggregate and the
+  recommendation urgency.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: med-ramipril, kind: medication, concept: ramipril, observed_at: '2024-01-10'}
+  - {id: obs-k-62, kind: observation, concept: potassium, value: {num: 6.2, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-85, kind: observation, concept: egfr, value: {num: 85, unit: mL/min}, observed_at: '2024-03-01'}
+
+expect_initial:
+  attributes:
+    hyperkalemia: {severity: severe}
+    hyperkalemia_concern: {level: HIGH, score: 8}
+  recommendation: {key: medication_review, urgency: HIGH}
+
+correction:
+  intent: the reported potassium was transcribed from the wrong line; the repeat is 5.2
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-k-52
+        kind: observation
+        concept: potassium
+        value: {num: 5.2, unit: mmol/L}
+        observed_at: '2024-03-01'
+    - op: supersede_fact
+      fact_id: obs-k-62
+      by: obs-k-52
+      reason: transcription error on the original report
+
+expect_after_state:
+  absent_facts_from_state: [obs-k-62]
+  fact_status: {obs-k-62: superseded}
+  attributes:
+    hyperkalemia: {severity: mild}
+    hyperkalemia_concern: {level: MODERATE, score: 6}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+expect_after_diff:
+  changed:
+    - {key: hyperkalemia, from: {severity: severe}, to: {severity: mild}, verdict: weakened}
+    - {key: hyperkalemia_concern, from: {level: HIGH}, to: {level: MODERATE}, verdict: weakened}
+    - {key: action:medication_review, from: {urgency: HIGH}, to: {urgency: MODERATE}, verdict: weakened}
+  why_changed_must_cite:
+    target: hyperkalemia_concern
+    verdict: weakened
+    facts: [obs-k-62, obs-k-52]
+    rules: [threshold.potassium]

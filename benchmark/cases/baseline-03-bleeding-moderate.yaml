@@ -1,0 +1,28 @@
+id: baseline-03-bleeding-moderate
+category: baseline
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  The second, independent chain. Warfarin, an interacting medication and a
+  supratherapeutic INR aggregate to MODERATE. Nothing here touches potassium.
+
+facts:
+  - {id: med-warfarin, kind: medication, concept: warfarin, observed_at: '2024-01-05'}
+  - {id: med-amiodarone, kind: medication, concept: amiodarone, observed_at: '2024-02-01'}
+  - {id: obs-inr-35, kind: observation, concept: inr, value: {num: 3.5, unit: ratio}, observed_at: '2024-03-01'}
+
+expect_initial:
+  active_conclusions:
+    - over_anticoagulation
+    - contribution:bleeding:warfarin
+    - contribution:bleeding:amiodarone
+    - contribution:bleeding:over_anticoagulation
+    - bleeding_concern
+    - action:anticoagulation_review
+  absent_conclusions: [hyperkalemia, hyperkalemia_concern]
+  attributes:
+    over_anticoagulation: {severity: moderate}
+    bleeding_concern: {level: MODERATE, score: 7}
+  recommendation: {key: anticoagulation_review, urgency: MODERATE}
+  questions: []
+  conflicts: []

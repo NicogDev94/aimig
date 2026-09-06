@@ -1,0 +1,53 @@
+id: supersession-02-inr-newer-reading
+category: supersession
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A supratherapeutic INR superseded by a newer in-range value. This time the
+  new value matches no band, so the claim does not weaken — it is retracted
+  outright, along with the contribution it fed.
+
+facts:
+  - {id: med-warfarin, kind: medication, concept: warfarin, observed_at: '2024-01-05'}
+  - {id: med-amiodarone, kind: medication, concept: amiodarone, observed_at: '2024-02-01'}
+  - {id: obs-inr-45, kind: observation, concept: inr, value: {num: 4.5, unit: ratio}, observed_at: '2024-02-20'}
+
+expect_initial:
+  attributes:
+    over_anticoagulation: {severity: severe}
+    bleeding_concern: {level: HIGH, score: 8}
+  recommendation: {key: anticoagulation_review, urgency: HIGH}
+
+correction:
+  intent: the dose was reduced and the repeat INR is back in range
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-inr-28
+        kind: observation
+        concept: inr
+        value: {num: 2.8, unit: ratio}
+        observed_at: '2024-03-05'
+    - op: supersede_fact
+      fact_id: obs-inr-45
+      by: obs-inr-28
+      reason: superseded by the post-dose-reduction repeat
+
+expect_after_state:
+  absent_conclusions: [over_anticoagulation, contribution:bleeding:over_anticoagulation]
+  absent_facts_from_state: [obs-inr-45]
+  fact_status: {obs-inr-45: superseded}
+  attributes:
+    bleeding_concern: {level: MODERATE, score: 5}
+  recommendation: {key: anticoagulation_review, urgency: MODERATE}
+
+expect_after_diff:
+  retracted: [over_anticoagulation, contribution:bleeding:over_anticoagulation]
+  changed:
+    - {key: bleeding_concern, from: {level: HIGH}, to: {level: MODERATE}, verdict: weakened}
+    - {key: action:anticoagulation_review, from: {urgency: HIGH}, to: {urgency: MODERATE}, verdict: weakened}
+  why_changed_must_cite:
+    target: bleeding_concern
+    verdict: weakened
+    facts: [obs-inr-45, obs-inr-28]
+    rules: [threshold.inr]
