@@ -2,4 +2,8 @@ export * from './domain/index.js';
 export * from './contracts.js';
 export * from './invariants/check-invariants.js';
 export * from './store/in-memory-store.js';
+export * from './knowledge/index.js';
+export * from './benchmark/index.js';
 export * from './engine/index.js';
+export * from './mutations/index.js';
+export * from './diff/index.js';

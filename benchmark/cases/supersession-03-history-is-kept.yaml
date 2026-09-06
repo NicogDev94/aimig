@@ -1,0 +1,51 @@
+id: supersession-03-history-is-kept
+category: supersession
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  Focused on invariant 3. After supersession the old value must remain fully
+  recorded in the patient layer, with its status and the human reason attached,
+  while no longer projecting into the reasoning layer. History is kept in
+  layer 2 — not by dragging ghosts through layer 3.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: obs-k-62, kind: observation, concept: potassium, value: {num: 6.2, unit: mmol/L}, observed_at: '2024-02-01'}
+
+expect_initial:
+  attributes:
+    hyperkalemia: {severity: severe}
+    hyperkalemia_concern: {level: MODERATE, score: 6}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+correction:
+  intent: a later potassium supersedes the February result
+  mutations:
+    - op: add_fact
+      fact:
+        id: obs-k-52
+        kind: observation
+        concept: potassium
+        value: {num: 5.2, unit: mmol/L}
+        observed_at: '2024-03-01'
+    - op: supersede_fact
+      fact_id: obs-k-62
+      by: obs-k-52
+      reason: superseded by the March result after dose adjustment
+
+expect_after_state:
+  absent_facts_from_state: [obs-k-62]
+  fact_status: {obs-k-62: superseded, obs-k-52: active}
+  attributes:
+    hyperkalemia: {severity: mild}
+    hyperkalemia_concern: {level: MODERATE, score: 4}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+expect_after_diff:
+  changed:
+    - {key: hyperkalemia, from: {severity: severe}, to: {severity: mild}, verdict: weakened}
+    - {key: hyperkalemia_concern, from: {score: 6}, to: {score: 4}, verdict: changed}
+  why_changed_must_cite:
+    target: hyperkalemia
+    verdict: weakened
+    facts: [obs-k-62, obs-k-52]

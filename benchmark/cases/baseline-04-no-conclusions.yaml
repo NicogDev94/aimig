@@ -1,0 +1,18 @@
+id: baseline-04-no-conclusions
+category: baseline
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A single normal observation and no risk factor. The engine must produce
+  nothing at all rather than an empty-but-present recommendation. A system that
+  always concludes something cannot be trusted when it concludes something.
+
+facts:
+  - {id: obs-k-40, kind: observation, concept: potassium, value: {num: 4.0, unit: mmol/L}, observed_at: '2024-03-01'}
+
+expect_initial:
+  active_conclusions: []
+  absent_conclusions: [hyperkalemia, hyperkalemia_concern, bleeding_concern]
+  recommendation: null
+  questions: []
+  conflicts: []

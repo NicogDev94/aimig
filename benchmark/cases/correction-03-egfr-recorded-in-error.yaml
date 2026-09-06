@@ -1,0 +1,46 @@
+id: correction-03-egfr-recorded-in-error
+category: correction
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  An eGFR that never belonged to this patient. Invalidation removes the whole
+  renal branch rather than replacing it, which is what distinguishes an error
+  from a supersession: there is no corrected value to put in its place.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: obs-k-58, kind: observation, concept: potassium, value: {num: 5.8, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-28, kind: observation, concept: egfr, value: {num: 28, unit: mL/min}, observed_at: '2024-03-01'}
+
+expect_initial:
+  attributes:
+    renal_impairment: {severity: severe}
+    hyperkalemia_concern: {level: HIGH, score: 8}
+  recommendation: {key: medication_review, urgency: HIGH}
+
+correction:
+  intent: the eGFR was filed against the wrong patient and no replacement exists
+  mutations:
+    - op: invalidate_fact
+      fact_id: obs-egfr-28
+      reason: filed against the wrong patient
+
+expect_after_state:
+  absent_conclusions: [renal_impairment, contribution:hyperkalemia:renal_impairment]
+  absent_facts_from_state: [obs-egfr-28]
+  fact_status: {obs-egfr-28: invalidated}
+  attributes:
+    hyperkalemia_concern: {level: MODERATE, score: 5}
+  recommendation: {key: medication_review, urgency: MODERATE}
+
+expect_after_diff:
+  retracted: [renal_impairment, contribution:hyperkalemia:renal_impairment]
+  changed:
+    - {key: hyperkalemia_concern, from: {level: HIGH}, to: {level: MODERATE}, verdict: weakened}
+    - {key: action:medication_review, from: {urgency: HIGH}, to: {urgency: MODERATE}, verdict: weakened}
+  why_changed_must_cite:
+    target: hyperkalemia_concern
+    verdict: weakened
+    facts: [obs-egfr-28]
+    rules: [threshold.egfr]
+    knowledge: [ka-renal-hyperk]

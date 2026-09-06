@@ -1,0 +1,30 @@
+id: baseline-02-hyperkalemia-high
+category: baseline
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  Two contributing medications, severe hyperkalemia and severe renal
+  impairment. Every contributor fires and the aggregate reaches HIGH.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: med-ramipril, kind: medication, concept: ramipril, observed_at: '2024-01-10'}
+  - {id: obs-k-62, kind: observation, concept: potassium, value: {num: 6.2, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-25, kind: observation, concept: egfr, value: {num: 25, unit: mL/min}, observed_at: '2024-03-01'}
+
+expect_initial:
+  active_conclusions:
+    - hyperkalemia
+    - renal_impairment
+    - contribution:hyperkalemia:spironolactone
+    - contribution:hyperkalemia:ramipril
+    - contribution:hyperkalemia:renal_impairment
+    - hyperkalemia_concern
+    - action:medication_review
+  attributes:
+    hyperkalemia: {severity: severe}
+    renal_impairment: {severity: severe}
+    hyperkalemia_concern: {level: HIGH, score: 11}
+  recommendation: {key: medication_review, urgency: HIGH}
+  questions: []
+  conflicts: []

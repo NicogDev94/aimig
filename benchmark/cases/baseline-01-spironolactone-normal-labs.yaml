@@ -1,0 +1,25 @@
+id: baseline-01-spironolactone-normal-labs
+category: baseline
+validation_scope: reasoning_mechanics_only
+clinical_validity: unvalidated
+description: >
+  A patient on spironolactone whose potassium and renal function are both
+  normal. Only the medication contributes; no threshold fires, so no
+  qualitative claim is made. Silence is not a conclusion.
+
+facts:
+  - {id: med-spiro, kind: medication, concept: spironolactone, observed_at: '2024-01-10'}
+  - {id: obs-k-42, kind: observation, concept: potassium, value: {num: 4.2, unit: mmol/L}, observed_at: '2024-03-01'}
+  - {id: obs-egfr-85, kind: observation, concept: egfr, value: {num: 85, unit: mL/min}, observed_at: '2024-03-01'}
+
+expect_initial:
+  active_conclusions:
+    - contribution:hyperkalemia:spironolactone
+    - hyperkalemia_concern
+    - action:monitor_potassium
+  absent_conclusions: [hyperkalemia, renal_impairment]
+  attributes:
+    hyperkalemia_concern: {level: LOW, score: 3}
+  recommendation: {key: monitor_potassium, urgency: LOW}
+  questions: []
+  conflicts: []

@@ -101,6 +101,32 @@ export interface ValidationNotice {
   readonly notice: string;
 }
 
+/**
+ * How contributions are turned into a level.
+ *
+ * This lives in the knowledge base rather than in the engine because D5 says
+ * enrichment happens through data rows, not code. The scale is arbitrary: it
+ * exists to make propagation observable, not because it is clinically
+ * defensible. See `KnowledgeBase.validation`.
+ */
+export interface AggregationScale {
+  readonly id: string;
+  /** Concept code the contributions point at. */
+  readonly target: string;
+  /** conclusionKey of the hypothesis produced. */
+  readonly conclusionKey: string;
+  readonly label: string;
+  /** Highest matching level wins; must be listed weakest first. */
+  readonly levels: readonly { readonly level: string; readonly minScore: number }[];
+  readonly evidence: readonly EvidenceRef[];
+}
+
+/** Point values backing the aggregation. Data, for the same reason. */
+export interface ScoringTable {
+  readonly strengthPoints: Readonly<Record<Strength, number>>;
+  readonly severityPoints: Readonly<Record<Severity, number>>;
+}
+
 export interface KnowledgeBase {
   readonly version: string;
   readonly validation: ValidationNotice;
@@ -109,4 +135,6 @@ export interface KnowledgeBase {
   readonly actions: readonly ActionRule[];
   readonly conflicts: readonly ConflictRule[];
   readonly ordinalScales: readonly OrdinalScale[];
+  readonly aggregations: readonly AggregationScale[];
+  readonly scoring: ScoringTable;
 }

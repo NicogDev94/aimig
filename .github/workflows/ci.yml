@@ -17,5 +17,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn typecheck
       - run: yarn test
-      # `yarn benchmark` joins this job in PR2 as a reported score, and becomes
-      # a gate from PR3 onward.
+      # The floor is gated inside `yarn test`; this step makes the score and
+      # the failing blocks visible in the log at every commit.
+      - run: yarn benchmark
