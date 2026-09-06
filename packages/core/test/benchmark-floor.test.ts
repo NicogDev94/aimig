@@ -14,7 +14,7 @@ import { formatReport, runBenchmark } from './benchmark/harness.js';
  *
  * Each PR raises the floor. It can never silently go back down.
  */
-const BENCHMARK_FLOOR = 0;
+const BENCHMARK_FLOOR = 20;
 
 describe('benchmark', () => {
   it('has 20 cases and 50 assertion blocks', () => {
