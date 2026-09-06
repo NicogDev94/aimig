@@ -45,6 +45,9 @@ expect_after_diff:
   changed:
     - {key: hyperkalemia, from: {severity: severe}, to: {severity: mild}, verdict: weakened}
     - {key: hyperkalemia_concern, from: {score: 6}, to: {score: 4}, verdict: changed}
+    # Same key, same urgency, but resting on a smaller premise set: the same
+    # advice for different reasons is not the same conclusion.
+    - {key: action:medication_review, verdict: changed}
   why_changed_must_cite:
     target: hyperkalemia
     verdict: weakened
