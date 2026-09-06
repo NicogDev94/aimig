@@ -349,7 +349,7 @@ function runCase(c: BenchmarkCase, kb: KnowledgeBase): BlockResult[] {
   let state1: ReasoningState | undefined;
 
   try {
-    facts1 = applyMutations(facts0, mutations, '2024-03-10T00:00:00Z');
+    facts1 = applyMutations(facts0, mutations);
     state1 = engine.derive(kb, facts1, 1);
     record(
       'after_state',

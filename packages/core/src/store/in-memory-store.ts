@@ -1,5 +1,6 @@
 import type { ReasoningStore } from '../contracts.js';
 import type { CaseLog, Commit, Version } from '../domain/index.js';
+import { validateCommit } from '../mutations/index.js';
 
 /** Volatile store. Used by tests and by the benchmark harness. */
 export class InMemoryReasoningStore implements ReasoningStore {
@@ -25,12 +26,9 @@ export class InMemoryReasoningStore implements ReasoningStore {
 
   async append(caseId: string, commit: Commit): Promise<Version> {
     const log = await this.load(caseId);
-    const expected = log.commits.length + 1;
-    if (commit.version !== expected) {
-      throw new Error(
-        `commit version ${commit.version} does not follow case "${caseId}" (expected ${expected})`,
-      );
-    }
+    // Both stores validate through the same path, so an invalid commit is
+    // rejected identically whether it is heading for memory or for disk.
+    validateCommit(log, commit);
     this.#logs.set(caseId, { caseId, commits: [...log.commits, commit] });
     return commit.version;
   }

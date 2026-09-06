@@ -7,3 +7,4 @@ export * from './benchmark/index.js';
 export * from './engine/index.js';
 export * from './mutations/index.js';
 export * from './diff/index.js';
+export * from './case-service.js';
