@@ -203,6 +203,26 @@ function assertState(
   return out;
 }
 
+/**
+ * The facts a set of mutations names.
+ *
+ * A supersession names two: the fact leaving the active set and the
+ * replacement that pushed it out. "eGFR 28 was superseded by eGFR 55" is one
+ * explanation, not two — and the replacement may itself conclude nothing.
+ */
+function factsNamedBy(mutations: readonly Mutation[]): string[] {
+  return mutations.flatMap((m) => {
+    switch (m.op) {
+      case 'add_fact':
+        return [m.fact.id];
+      case 'supersede_fact':
+        return [m.factId, m.by];
+      case 'invalidate_fact':
+        return [m.factId];
+    }
+  });
+}
+
 function assertDiff(
   expectation: DiffExpectation,
   diff: ReasoningDiff,
@@ -270,9 +290,7 @@ function assertDiff(
     if (cite.verdict !== undefined && why.verdict !== cite.verdict) {
       out.push(`whyChanged(${cite.target}).verdict: expected ${cite.verdict}, got ${why.verdict}`);
     }
-    const citedFacts = new Set(
-      why.causedBy.flatMap((m) => (m.op === 'add_fact' ? [m.fact.id] : [m.factId])),
-    );
+    const citedFacts = new Set(factsNamedBy(why.causedBy));
     for (const id of cite.facts ?? []) {
       if (!citedFacts.has(id)) out.push(`whyChanged(${cite.target}) must cite fact "${id}"`);
     }
@@ -298,9 +316,7 @@ function assertDiff(
   const notCite = expectation.whyChangedMustNotCite;
   if (notCite !== undefined) {
     const why = explain(notCite.target);
-    const citedFacts = new Set(
-      why.causedBy.flatMap((m) => (m.op === 'add_fact' ? [m.fact.id] : [m.factId])),
-    );
+    const citedFacts = new Set(factsNamedBy(why.causedBy));
     for (const id of notCite.facts ?? []) {
       if (citedFacts.has(id)) {
         out.push(

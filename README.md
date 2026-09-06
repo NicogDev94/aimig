@@ -66,8 +66,16 @@ of the LLM and of the storage" stays a fact instead of an intention.
 ```bash
 yarn install
 yarn typecheck
-yarn test
+yarn test        # unit tests + the benchmark floor
+yarn benchmark   # the full 50-block report
+yarn demo        # The Correction Demo, headless
 ```
+
+`yarn demo` runs the canonical scenario end to end and prints the reasoning,
+the correction, the affected dependencies, the recomputed state, the diff and
+the answer to *Why did this recommendation change?* — no UI required. That is
+deliberate: if the value of an explicit reasoning state is not legible there,
+no interface will rescue it.
 
 ## Milestone 0 — The Correction Demo
 
