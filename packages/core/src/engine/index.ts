@@ -1,22 +1,26 @@
-import { NotImplementedError, type ReasoningEngine } from '../contracts.js';
+import type { ReasoningEngine } from '../contracts.js';
+import { derive } from './derive.js';
+import { explain } from './explain.js';
+import { affectedBy } from './dependencies.js';
+
+export { derive } from './derive.js';
+export { explain } from './explain.js';
+export { affectedBy, dependents } from './dependencies.js';
+export { KnowledgeIndex } from './knowledge-index.js';
+export * from './rule-kinds.js';
+export { RULES } from './rules/index.js';
 
 /**
- * The deterministic engine.
+ * The deterministic engine: no LLM, no I/O, no clock.
  *
- * Implemented in PR3 (derivation) and PR4 (dependencies). The factory exists
- * now so that the benchmark harness of PR2 can be written against a stable
- * import and never has to be rewritten.
+ * A factory rather than a singleton so a test can hold two engines without
+ * sharing anything — there is no state to share today, and keeping it that way
+ * is the point.
  */
 export function createEngine(): ReasoningEngine {
   return {
-    derive() {
-      throw new NotImplementedError('derive');
-    },
-    explain() {
-      throw new NotImplementedError('explain');
-    },
-    affectedBy() {
-      throw new NotImplementedError('affectedBy');
-    },
+    derive: (knowledge, facts, version) => derive(knowledge, facts, version),
+    explain: (knowledge, state, nodeId) => explain(knowledge, state, nodeId),
+    affectedBy: (state, factId) => affectedBy(state, factId),
   };
 }
